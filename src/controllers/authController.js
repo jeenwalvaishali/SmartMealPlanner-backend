@@ -90,12 +90,13 @@ exports.getMe = async (req, res) => {
     try {
         const userId = req.user.id;
 
+        //Fetch User
         const user = await User.findById(userId).select('-password');
-
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
+        //return user info
         return res.status(200).json(user);
     } catch (error) {
         console.error(error);

@@ -5,9 +5,13 @@ const app = express();
 // Middleware
 app.use(express.json());
 
-// Health check
-app.get('/', (req, res) => {
-  res.json({ message: 'API is running' });
-});
+// Routes
+const authRoutes = require('./routes/authRoutes');
+const recipeRoutes = require('./routes/recipeRoutes');
+
+// Route mounting
+app.use('/api/auth', authRoutes);
+app.use('/api/recipes', recipeRoutes);
+
 
 module.exports = app;
