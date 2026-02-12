@@ -1,5 +1,7 @@
 const Recipe = require('../models/Recipe');
 const mongoose = require('mongoose');
+const cloudinary = require('../config/cloudinary');
+
 
 exports.createRecipe = async (req, res) => {
     try {
@@ -16,7 +18,8 @@ exports.createRecipe = async (req, res) => {
             steps,
             cuisine,
             prepTime,
-            imageUrl
+            imageUrl,
+            imagePublicId
         } = req.body;
 
         // 3. Validation
@@ -27,7 +30,8 @@ exports.createRecipe = async (req, res) => {
             !Array.isArray(steps) || steps.length === 0 ||
             !cuisine ||
             !prepTime ||
-            !imageUrl
+            !imageUrl ||
+            !imagePublicId
         ) {
             return res.status(400).json({ message: 'Invalid or missing fields' });
         }
@@ -41,6 +45,7 @@ exports.createRecipe = async (req, res) => {
             cuisine,
             prepTime,
             imageUrl,
+            imagePublicId,
             createdBy: req.user.id
         });
 
@@ -229,6 +234,11 @@ exports.deleteRecipeById = async (req, res) => {
             });
         }
 
+        //  Delete image from Cloudinary
+        if (recipe.imagePublicId) {
+            await cloudinary.uploader.destroy(recipe.imagePublicId);
+        }
+
         // 4. Delete recipe
         await Recipe.findByIdAndDelete(id);
 
@@ -244,6 +254,150 @@ exports.deleteRecipeById = async (req, res) => {
     }
 };
 
+exports.rateRecipe = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { rating } = req.body;
+        const userId = req.user.id;
+
+        // 1. Validate ObjectId
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid recipe ID',
+            });
+        }
+
+        // 2. Validate rating value
+        if (!rating || rating < 1 || rating > 5) {
+            return res.status(400).json({
+                success: false,
+                message: 'Rating must be between 1 and 5',
+            });
+        }
+
+        // 3. Fetch recipe
+        const recipe = await Recipe.findById(id);
+
+        if (!recipe) {
+            return res.status(404).json({
+                success: false,
+                message: 'Recipe not found',
+            });
+        }
+
+        // 4. Check if user already rated
+        const existingRating = recipe.ratings.find(
+            r => r.user.toString() === userId
+        );
+
+        if (existingRating) {
+            // Update rating
+            existingRating.value = rating;
+        } else {
+            // Add new rating
+            recipe.ratings.push({
+                user: userId,
+                value: rating,
+            });
+        }
+
+        // 5. Recalculate average rating
+        recipe.calculateAvgRating();
+
+        await recipe.save();
+
+        // 6. Success response
+        res.status(200).json({
+            success: true,
+            avgRating: recipe.avgRating,
+            totalRatings: recipe.ratings.length,
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error',
+        });
+    }
+};
+
+exports.searchRecipes = async (req, res) => {
+    try {
+        const {
+            keyword,
+            cuisine,
+            ingredient,
+            minRating,
+            sort,
+            page,
+            limit
+        } = req.query;
+
+        const pageNumber = Math.max(parseInt(page) || 1, 1);
+        const limitNumber = Math.min(parseInt(limit) || 10, 50);
+        const skip = (pageNumber - 1) * limitNumber;
+
+        const query = {};
+
+        // 🔎 Text search
+        if (keyword) {
+            query.$or = [
+                { title: { $regex: keyword, $options: 'i' } },
+                { description: { $regex: keyword, $options: 'i' } }
+            ];
+        }
+
+        // 🍝 Cuisine filter
+        if (cuisine) {
+            query.cuisine = { $regex: cuisine, $options: 'i' };
+        }
+
+        // 🥕 Ingredient filter
+        if (ingredient) {
+            query.ingredients = {
+                $elemMatch: { $regex: ingredient, $options: 'i' }
+            };
+        }
+
+        // ⭐ Rating filter
+        if (minRating) {
+            query.avgRating = { $gte: Number(minRating) };
+        }
+
+        const sortMap = {
+            rating: { avgRating: -1 },
+            prepTime: { prepTime: 1 },
+            newest: { createdAt: -1 }
+        };
+
+        const sortOption = sortMap[sort] || { createdAt: -1 };
+
+        const recipes = await Recipe.find(query)
+            .sort(sortOption)
+            .skip(skip)
+            .limit(limitNumber)
+            .lean();
+
+        const total = await Recipe.countDocuments(query);
+
+        res.status(200).json({
+            success: true,
+            total,
+            page: pageNumber,
+            pages: Math.ceil(total / limitNumber),
+            data: recipes
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error'
+        });
+    }
+};
 
 
 

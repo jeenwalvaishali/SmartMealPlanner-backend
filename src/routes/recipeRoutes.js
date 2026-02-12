@@ -3,6 +3,8 @@ const router = express.Router();
 
 const {
   createRecipe,
+  rateRecipe,
+  searchRecipes,
   getAllRecipes,
   getRecipeById,
   updateRecipeById,
@@ -11,6 +13,7 @@ const {
 
 const verifyToken = require('../middleware/authMiddleware');
 const roleMiddleware = require('../middleware/roleMiddleware');
+const upload = require('../middleware/uploadMiddleware');
 
 // Public routes
 router.get('/', getAllRecipes);
@@ -36,5 +39,24 @@ router.delete(
   roleMiddleware('ADMIN'),
   deleteRecipeById
 );
+
+router.post('/recipes/:id/rate', verifyToken, rateRecipe);
+
+router.get('/recipes/search', searchRecipes);
+
+router.post(
+  '/recipes/upload',
+  verifyToken,
+  upload.single('image'),
+  (req, res) => {
+    res.status(200).json({
+      imageUrl: req.file.path,
+      imagePublicId: req.file.filename
+    });
+  }
+);
+
+
+
 
 module.exports = router;
