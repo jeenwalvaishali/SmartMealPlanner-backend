@@ -15,11 +15,22 @@ const verifyToken = require('../middleware/authMiddleware');
 const roleMiddleware = require('../middleware/roleMiddleware');
 const upload = require('../middleware/uploadMiddleware');
 
-// Public routes
+
+// ---------- PUBLIC ROUTES ----------
+
+// Get all recipes
 router.get('/', getAllRecipes);
+
+// Search recipes
+router.get('/search', searchRecipes);
+
+// Get recipe by ID
 router.get('/:id', getRecipeById);
 
-// Protected routes
+
+// ---------- PROTECTED ROUTES ----------
+
+// Create recipe (ADMIN only)
 router.post(
   '/',
   verifyToken,
@@ -27,12 +38,14 @@ router.post(
   createRecipe
 );
 
+// Update recipe
 router.put(
   '/:id',
   verifyToken,
-  updateRecipeById // ownership + admin handled inside controller
+  updateRecipeById
 );
 
+// Delete recipe (ADMIN only)
 router.delete(
   '/:id',
   verifyToken,
@@ -40,12 +53,16 @@ router.delete(
   deleteRecipeById
 );
 
-router.post('/recipes/:id/rate', verifyToken, rateRecipe);
-
-router.get('/recipes/search', searchRecipes);
-
+// Rate recipe
 router.post(
-  '/recipes/upload',
+  '/:id/rate',
+  verifyToken,
+  rateRecipe
+);
+
+// Upload recipe image
+router.post(
+  '/upload',
   verifyToken,
   upload.single('image'),
   (req, res) => {
@@ -56,7 +73,5 @@ router.post(
   }
 );
 
-
-
-
 module.exports = router;
+
