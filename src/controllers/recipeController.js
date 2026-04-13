@@ -11,7 +11,7 @@ exports.createRecipe = async (req, res) => {
         }
 
         // 2. Extract allowed fields only
-        const {
+        let {
             title,
             description,
             ingredients,
