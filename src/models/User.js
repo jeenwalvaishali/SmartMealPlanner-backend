@@ -23,7 +23,11 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ['USER', 'ADMIN'],
       default: 'USER'
-    }
+    },
+    favorites: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Recipe'
+    }]
   },
   { timestamps: true }
 );

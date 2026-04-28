@@ -1,6 +1,7 @@
 const Recipe = require('../models/Recipe');
 const mongoose = require('mongoose');
 const cloudinary = require('../config/cloudinary');
+const User = require('../models/User');
 
 
 exports.createRecipe = async (req, res) => {
@@ -66,7 +67,7 @@ exports.getAllRecipes = async (req, res) => {
     try {
         // 1. Pagination (safe defaults + limits)
         const page = Math.max(parseInt(req.query.page) || 1, 1);
-        const limit = Math.min(parseInt(req.query.limit) || 10, 50);
+        const limit = Math.min(parseInt(req.query.limit) || 20, 50);
         const skip = (page - 1) * limit;
 
         // 2. Filters
@@ -390,6 +391,158 @@ exports.searchRecipes = async (req, res) => {
             data: recipes
         });
 
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error'
+        });
+    }
+};
+
+exports.getAllCategories = async (req, res) => {
+    try {
+        const categories = await Recipe.distinct('cuisine');
+        res.status(200).json({
+            success: true,
+            data: categories
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error'
+        });
+    }
+};
+
+exports.getRecommendedRecipes = async (req, res) => {
+    try {
+        const limit = Math.min(parseInt(req.query.limit) || 10, 20);
+        const recipes = await Recipe.find()
+            .sort({ avgRating: -1, createdAt: -1 })
+            .limit(limit)
+            .lean();
+        res.status(200).json({
+            success: true,
+            data: recipes
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error'
+        });
+    }
+};
+
+exports.getRecipeOfTheWeek = async (req, res) => {
+    try {
+        // For simplicity, return the recipe with the highest average rating
+        const recipe = await Recipe.findOne()
+            .sort({ avgRating: -1, createdAt: -1 })
+            .lean();
+        if (!recipe) {
+            return res.status(404).json({
+                success: false,
+                message: 'No recipes found'
+            });
+        }
+        res.status(200).json({
+            success: true,
+            data: recipe
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error'
+        });
+    }
+};
+
+exports.addToFavorites = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.id;
+
+        // Validate ObjectId
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid recipe ID'
+            });
+        }
+
+        // Check if recipe exists
+        const recipe = await Recipe.findById(id);
+        if (!recipe) {
+            return res.status(404).json({
+                success: false,
+                message: 'Recipe not found'
+            });
+        }
+
+        // Add to user's favorites if not already
+        const user = await User.findById(userId);
+        if (!user.favorites.includes(id)) {
+            user.favorites.push(id);
+            await user.save();
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Recipe added to favorites'
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error'
+        });
+    }
+};
+
+exports.removeFromFavorites = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.id;
+
+        // Validate ObjectId
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid recipe ID'
+            });
+        }
+
+        // Remove from user's favorites
+        await User.findByIdAndUpdate(userId, {
+            $pull: { favorites: id }
+        });
+
+        res.status(200).json({
+            success: true,
+            message: 'Recipe removed from favorites'
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error'
+        });
+    }
+};
+
+exports.getFavorites = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const user = await User.findById(userId).populate('favorites');
+
+        res.status(200).json({
+            success: true,
+            data: user.favorites
+        });
     } catch (error) {
         console.error(error);
         res.status(500).json({
