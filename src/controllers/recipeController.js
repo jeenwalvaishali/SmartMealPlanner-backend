@@ -328,6 +328,7 @@ exports.searchRecipes = async (req, res) => {
     try {
         const {
             keyword,
+            q,
             cuisine,
             ingredient,
             minRating,
@@ -342,11 +343,12 @@ exports.searchRecipes = async (req, res) => {
 
         const query = {};
 
-        // 🔎 Text search
-        if (keyword) {
+        // 🔎 Text search (accept `keyword` or `q`)
+        const term = (keyword || q || '').trim();
+        if (term) {
             query.$or = [
-                { title: { $regex: keyword, $options: 'i' } },
-                { description: { $regex: keyword, $options: 'i' } }
+                { title: { $regex: term, $options: 'i' } },
+                { description: { $regex: term, $options: 'i' } }
             ];
         }
 
@@ -419,7 +421,14 @@ exports.getAllCategories = async (req, res) => {
 exports.getRecommendedRecipes = async (req, res) => {
     try {
         const limit = Math.min(parseInt(req.query.limit) || 10, 20);
-        const recipes = await Recipe.find()
+        const category = req.query.category || req.query.cuisine;
+        const filter = {};
+        if (category) {
+            const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+            filter.cuisine = { $regex: new RegExp(`^${escapeRegExp(category)}$`, 'i') };
+        }
+
+        const recipes = await Recipe.find(filter)
             .sort({ avgRating: -1, createdAt: -1 })
             .limit(limit)
             .lean();
