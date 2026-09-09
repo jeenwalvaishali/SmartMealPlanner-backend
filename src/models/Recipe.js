@@ -25,6 +25,36 @@ const recipeSchema = new mongoose.Schema(
       required: true,
       index: true
     },
+    dietType: {
+      type: String,
+      required: true,
+      trim: true,
+      index: true
+    },
+    mealTypes: {
+      type: [String],
+      required: true
+    },
+    calories: {
+      type: Number,
+      required: true,
+      min: 0
+    },
+    protein: {
+      type: Number,
+      required: true,
+      min: 0
+    },
+    carbohydrates: {
+      type: Number,
+      required: true,
+      min: 0
+    },
+    fat: {
+      type: Number,
+      required: true,
+      min: 0
+    },
     prepTime: {
       type: Number,
       required: true

@@ -20,7 +20,13 @@ exports.createRecipe = async (req, res) => {
             cuisine,
             prepTime,
             imageUrl,
-            imagePublicId
+            imagePublicId,
+            dietType,
+            mealTypes,
+            calories,
+            protein,
+            carbohydrates,
+            fat
         } = req.body;
 
         // 3. Validation
@@ -32,7 +38,13 @@ exports.createRecipe = async (req, res) => {
             !cuisine ||
             !prepTime ||
             !imageUrl ||
-            !imagePublicId
+            !imagePublicId ||
+            !dietType ||
+            !Array.isArray(mealTypes) || mealTypes.length === 0 ||
+            calories === undefined || calories === null || Number.isNaN(Number(calories)) || Number(calories) < 0 ||
+            protein === undefined || protein === null || Number.isNaN(Number(protein)) || Number(protein) < 0 ||
+            carbohydrates === undefined || carbohydrates === null || Number.isNaN(Number(carbohydrates)) || Number(carbohydrates) < 0 ||
+            fat === undefined || fat === null || Number.isNaN(Number(fat)) || Number(fat) < 0
         ) {
             return res.status(400).json({ message: 'Invalid or missing fields' });
         }
@@ -47,6 +59,12 @@ exports.createRecipe = async (req, res) => {
             prepTime,
             imageUrl,
             imagePublicId,
+            dietType,
+            mealTypes,
+            calories,
+            protein,
+            carbohydrates,
+            fat,
             createdBy: req.user.id
         });
 
@@ -67,7 +85,7 @@ exports.getAllRecipes = async (req, res) => {
     try {
         // 1. Pagination (safe defaults + limits)
         const page = Math.max(parseInt(req.query.page) || 1, 1);
-        const limit = Math.min(parseInt(req.query.limit) || 20, 50);
+        const limit = Math.min(parseInt(req.query.limit) || 30, 50);
         const skip = (page - 1) * limit;
 
         // 2. Filters
@@ -78,6 +96,40 @@ exports.getAllRecipes = async (req, res) => {
                 $regex: req.query.cuisine,
                 $options: 'i', // case-insensitive
             };
+        }
+
+        if (req.query.dietType) {
+            filter.dietType = {
+                $regex: req.query.dietType,
+                $options: 'i',
+            };
+        }
+
+        const mealTypes = req.query.mealTypes || req.query.mealType;
+        if (mealTypes) {
+            filter.mealTypes = {
+                $in: mealTypes.split(',').map((mealType) => mealType.trim()).filter(Boolean),
+            };
+        }
+
+        const numericFilters = [
+            ['calories', 'minCalories', '$gte'],
+            ['calories', 'maxCalories', '$lte'],
+            ['protein', 'minProtein', '$gte'],
+            ['protein', 'maxProtein', '$lte'],
+            ['carbohydrates', 'minCarbohydrates', '$gte'],
+            ['carbohydrates', 'maxCarbohydrates', '$lte'],
+            ['fat', 'minFat', '$gte'],
+            ['fat', 'maxFat', '$lte'],
+        ];
+
+        for (const [field, queryParam, operator] of numericFilters) {
+            if (req.query[queryParam] !== undefined && Number.isFinite(Number(req.query[queryParam]))) {
+                filter[field] = {
+                    ...(filter[field] || {}),
+                    [operator]: Number(req.query[queryParam]),
+                };
+            }
         }
 
         // 3. Query
@@ -152,7 +204,27 @@ exports.getRecipeById = async (req, res) => {
 exports.updateRecipeById = async (req, res) => {
     try {
         const { id } = req.params;
-        const updates = req.body;
+        const editableFields = [
+            'title',
+            'description',
+            'ingredients',
+            'steps',
+            'cuisine',
+            'dietType',
+            'mealTypes',
+            'calories',
+            'protein',
+            'carbohydrates',
+            'fat',
+            'prepTime',
+            'imageUrl',
+            'imagePublicId',
+        ];
+        const updates = Object.fromEntries(
+            editableFields
+                .filter((field) => req.body[field] !== undefined)
+                .map((field) => [field, req.body[field]])
+        );
 
         // 1. Validate ObjectId
         if (!mongoose.Types.ObjectId.isValid(id)) {
