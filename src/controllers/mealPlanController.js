@@ -1,4 +1,25 @@
-const { generateMealPlan } = require('../services/mealPlanService');
+const { generateMealPlan, getMealPlan } = require('../services/mealPlanService');
+
+exports.getSaved = async (req, res) => {
+  try {
+    const mealPlan = await getMealPlan(req.user.id);
+
+    if (!mealPlan) {
+      return res.status(404).json({
+        success: false,
+        message: 'No saved meal plan found for the current week'
+      });
+    }
+
+    return res.status(200).json(mealPlan);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+};
 
 exports.generate = async (req, res) => {
   try {
