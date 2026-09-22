@@ -818,7 +818,7 @@ The current development configuration allows CORS broadly for API requests, so p
 
 https://github.com/jeenwalvaishali/SMP-FrontendAndroidAPP
 
-### 🌐 React Web Application
+### 🌐 React Backend Application
 
 https://github.com/jeenwalvaishali/SmartMealPlanner-backend
 
