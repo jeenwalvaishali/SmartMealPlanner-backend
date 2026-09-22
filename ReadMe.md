@@ -86,6 +86,14 @@ React Web App (JavaScript)
 * Retrieve the user's saved plan for the current week
 * Populated recipe details in saved meal plans
 
+### 🤖 AI Meal Assistant
+
+* Chat with an AI assistant using the user's meal plan and preferences
+* Provide controlled context including compatible recipes, calories, and cooking times
+* Replace a selected meal using an AI-selected compatible recipe
+* Validate AI recipe selections against real database candidates
+* Use Ollama with the `llama3.2` model
+
 ---
 
 ## 📦 Tech Stack
@@ -99,6 +107,7 @@ React Web App (JavaScript)
 * bcrypt
 * Cloudinary
 * Multer
+* Ollama (`llama3.2`)
 
 ### Mobile
 
@@ -191,6 +200,7 @@ Send the image as `multipart/form-data` using the field name `image`. The maximu
 ```http
 POST /api/meal-plans/generate              (Protected)
 GET  /api/meal-plans                       (Protected)
+POST /api/meal-plans/:mealPlanId/replace   (Protected)
 ```
 
 Generate request body:
@@ -207,6 +217,40 @@ Generate request body:
 
 The `GET /api/meal-plans` endpoint returns the authenticated user's saved plan for the current week. It returns `404` when no plan has been saved for the current week.
 
+Meal replacement request body:
+
+```json
+{
+    "day": "Monday",
+    "mealType": "BREAKFAST"
+}
+```
+
+### 🤖 AI Assistant
+
+```http
+POST /api/ai/chat                         (Protected)
+```
+
+Request body:
+
+```json
+{
+    "message": "What can I replace my Monday breakfast with?"
+}
+```
+
+Success response:
+
+```json
+{
+    "success": true,
+    "answer": "..."
+}
+```
+
+The chat endpoint uses the authenticated user's current meal plan, preferences, and compatible recipes as controlled AI context. Responses are returned as a single JSON response; streaming and server-side chat history are not currently implemented.
+
 ---
 
 ## 🚀 Getting Started
@@ -214,6 +258,12 @@ The `GET /api/meal-plans` endpoint returns the authenticated user's saved plan f
 ```bash
 npm install
 npm start
+```
+
+For development with automatic restart:
+
+```bash
+npm run dev
 ```
 
 Create a `.env` file:
@@ -226,6 +276,37 @@ CLOUDINARY_NAME=your_cloud_name
 CLOUDINARY_KEY=your_api_key
 CLOUDINARY_SECRET=your_api_secret
 ```
+
+### Ollama Setup
+
+Install Ollama from [ollama.com/download/windows](https://ollama.com/download/windows), then ensure the Ollama server is running and the model is available:
+
+```bash
+ollama serve
+ollama pull llama3.2
+```
+
+If Ollama is already running, do not start a second server. The backend calls:
+
+```text
+http://localhost:11434/api/generate
+```
+
+### Android and Postman URLs
+
+For Postman on the same computer, use:
+
+```text
+http://localhost:5000
+```
+
+For the Android emulator, use:
+
+```text
+http://10.0.2.2:5000
+```
+
+For a physical Android device, use the computer's local IPv4 address, for example `http://192.168.1.10:5000`, and keep both devices on the same network.
 
 ---
 
