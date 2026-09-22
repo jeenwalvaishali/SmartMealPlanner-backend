@@ -1,323 +1,838 @@
-### 📌 Project Overview
+# 🍽️ Smart Meal Planner — Backend API
 
-## 🍽️ Smart Meal Planner & Recipe Platform
+A full-stack meal planning and recipe platform backend built with **Node.js, Express.js, MongoDB, and REST APIs**.
 
-A full-stack cross-platform recipe platform (Android + Web) that allows users to discover recipes, rate them, search with advanced filters, upload images, generate meal plans, save favorites, and manage content via a secure admin interface.
-
----
-
-## 🏗️ System Architecture
-
-```
-Android App (Kotlin - MVVM)
-React Web App (JavaScript)
-                │
-                └── REST APIs (Node.js + Express)
-                                        │
-                                MongoDB (Indexed)
-                                        │
-                     Cloudinary (Image Storage)
-```
+The backend powers the SmartMealPlanner Android and React applications and provides authentication, recipe management, advanced search, ratings, favorites, image uploads, personalized meal planning, AI-assisted meal conversations, and AI-powered meal replacement.
 
 ---
 
-## 🔐 Authentication & Authorization
+## 📌 Project Overview
+
+SmartMealPlanner is a cross-platform recipe and meal-planning platform consisting of:
+
+* 📱 Android application built with Kotlin and MVVM
+* 🌐 React web application
+* ⚙️ Node.js + Express REST API
+* 🛠️ React admin panel
+* 🗄️ MongoDB database
+* 📸 Cloudinary image storage
+* 🤖 Ollama-powered AI meal assistant
+
+The backend acts as the central API layer connecting the client applications with the database, image storage, authentication system, and AI service.
+
+---
+
+# 🏗️ System Architecture
+
+```text
+                    ┌──────────────────────────┐
+                    │      Android App         │
+                    │     Kotlin + MVVM        │
+                    └────────────┬─────────────┘
+                                 │
+                    ┌────────────▼─────────────┐
+                    │       React Web App      │
+                    │        JavaScript        │
+                    └────────────┬─────────────┘
+                                 │
+                                 │ REST API
+                                 ▼
+                    ┌──────────────────────────┐
+                    │    Node.js + Express     │
+                    │       Backend API        │
+                    └────────────┬─────────────┘
+                                 │
+              ┌──────────────────┼──────────────────┐
+              │                  │                  │
+              ▼                  ▼                  ▼
+       ┌────────────┐     ┌─────────────┐    ┌─────────────┐
+       │  MongoDB   │     │  Cloudinary │    │   Ollama    │
+       │  Database  │     │    Images   │    │  llama3.2   │
+       └────────────┘     └─────────────┘    └─────────────┘
+```
+
+---
+
+# 🔐 Authentication & Authorization
+
+The API implements token-based authentication and role-based authorization.
+
+### Security Features
 
 * JWT-based authentication
-* Secure password hashing using bcrypt
-* Role-based access control (USER, ADMIN)
+* Password hashing using `bcryptjs`
+* Role-based access control
+* `USER` and `ADMIN` roles
+* Protected API routes
 * Ownership-based update permissions
-* Protected routes using middleware
+* JWT validation middleware
+* Authenticated user context through `req.user`
 
 ---
 
-## ⭐ Core Features
+# ⭐ Core Features
 
-### 👤 Authentication
+## 👤 Authentication
 
-* Register / Login
-* Get current user profile
-* Secure JWT token validation
+* User registration
+* User login
+* Retrieve authenticated user profile
+* JWT token validation
+* Protected routes
 
-### 🍳 Recipe Management
+---
 
-* Create recipe (ADMIN)
-* Update recipe (Owner or ADMIN)
-* Delete recipe (ADMIN)
-* Get all recipes (pagination + filtering)
-* Get recipe by ID (with populated creator)
-* Recommended recipes and recipe of the week
+## 🍳 Recipe Management
 
-### ⭐ Rating System
+* Create recipes — ADMIN
+* Update recipes — Owner or ADMIN
+* Delete recipes — ADMIN
+* Retrieve all recipes
+* Pagination
+* Filtering
+* Retrieve recipe by ID
+* Retrieve recipe categories
+* Recommended recipes
+* Recipe of the week
+* Creator information through populated references
 
-* Authenticated users can rate recipes (1–5)
-* Users can update their previous rating
-* Automatic average rating calculation
-* Rating-based filtering in search
+---
 
-### ❤️ Favorites
+## ⭐ Rating System
 
-* Authenticated users can add recipes to favorites
+Authenticated users can:
+
+* Rate recipes from 1–5
+* Update an existing rating
+* View rating information
+* Filter recipes using rating criteria
+
+The backend calculates and maintains recipe rating information.
+
+---
+
+## ❤️ Favorites
+
+Authenticated users can:
+
+* Add recipes to favorites
 * Remove recipes from favorites
-* Get the authenticated user's favorite recipes
-
-### 🔍 Advanced Search
-
-* Keyword search (title + description)
-* Filter by cuisine, ingredient, and minimum rating
-* Filter by meal type and nutrition values
-* Sorting (rating, newest, prep time)
-* Pagination with metadata
-* Optimized MongoDB queries with indexing
-
-### 📸 Image Upload
-
-* Image upload via Cloudinary
-* Secure Multer middleware integration
-* Stores `imageUrl` and `imagePublicId`
-* Automatic image cleanup on delete
-* Supports image replacement lifecycle
-
-### 📅 Meal Planning
-
-* Generate a weekly meal plan for the authenticated user
-* Filter plans by diet type, calories, cuisine, and cooking time
-* Save one plan per user per week
-* Retrieve the user's saved plan for the current week
-* Populated recipe details in saved meal plans
-
-### 🤖 AI Meal Assistant
-
-* Chat with an AI assistant using the user's meal plan and preferences
-* Provide controlled context including compatible recipes, calories, and cooking times
-* Replace a selected meal using an AI-selected compatible recipe
-* Validate AI recipe selections against real database candidates
-* Use Ollama with the `llama3.2` model
+* Retrieve their favorite recipes
 
 ---
 
-## 📦 Tech Stack
+## 🔍 Advanced Recipe Search
 
-### Backend
+The recipe API supports multiple search and filtering options.
 
-* Node.js
-* Express.js
-* MongoDB + Mongoose
-* JWT Authentication
-* bcrypt
-* Cloudinary
-* Multer
-* Ollama (`llama3.2`)
+### Supported functionality
 
-### Mobile
+* Keyword search
+* Search by recipe title
+* Search by description
+* Cuisine filtering
+* Ingredient filtering
+* Minimum rating filtering
+* Meal-type filtering
+* Nutrition-based filtering
+* Sorting
+* Pagination
+* Pagination metadata
 
-* Kotlin
-* MVVM Architecture
-* Retrofit
-* Coroutines
-* LiveData
-
-### Web
-
-* React (JavaScript)
-* REST API integration
-
----
-
-## 📁 Backend Folder Structure
-
-```
-src/
- ├── controllers/
- ├── routes/
- ├── models/
- ├── middleware/
- ├── config/
- ├── services/
- ├── utils/
- ├── app.js
- └── server.js
-```
-
----
-
-## 🔗 Key API Endpoints
-
-All endpoints are prefixed with `/api`. Protected endpoints require:
-
-```http
-Authorization: Bearer <token>
-```
-
-### 🔐 Auth
-
-```http
-POST /api/auth/register
-POST /api/auth/login
-GET  /api/auth/me                         (Protected)
-```
-
-### 🍳 Recipes
-
-```http
-POST   /api/recipes                        (ADMIN)
-GET    /api/recipes                        (Public)
-GET    /api/recipes/search                 (Public)
-GET    /api/recipes/categories             (Public)
-GET    /api/recipes/recommended            (Public)
-GET    /api/recipes/week                   (Public)
-GET    /api/recipes/:id                    (Public)
-PUT    /api/recipes/:id                    (Owner or ADMIN)
-DELETE /api/recipes/:id                    (ADMIN)
-```
-
-### ⭐ Ratings and Favorites
-
-```http
-POST   /api/recipes/:id/rate                (Protected)
-POST   /api/recipes/favorites/:id           (Protected)
-DELETE /api/recipes/favorites/:id           (Protected)
-GET    /api/recipes/favorites               (Protected)
-```
-
-### 🔍 Search Filters
+### Example
 
 ```http
 GET /api/recipes?page=1&limit=20&dietType=vegetarian&mealTypes=LUNCH,DINNER
+```
+
+```http
 GET /api/recipes/search?keyword=chicken&cuisine=Indian&sort=rating
 ```
 
-### 📸 Image Upload
-
-```http
-POST /api/recipes/upload                   (Protected)
-```
-
-Send the image as `multipart/form-data` using the field name `image`. The maximum file size is 5 MB.
-
-### 📅 Meal Plans
-
-```http
-POST /api/meal-plans/generate              (Protected)
-GET  /api/meal-plans                       (Protected)
-POST /api/meal-plans/:mealPlanId/replace   (Protected)
-```
-
-Generate request body:
-
-```json
-{
-    "dietType": "vegetarian",
-    "dailyCalories": 2000,
-    "mealsPerDay": 3,
-    "cuisine": "Indian",
-    "maxCookingTime": 30
-}
-```
-
-The `GET /api/meal-plans` endpoint returns the authenticated user's saved plan for the current week. It returns `404` when no plan has been saved for the current week.
-
-Meal replacement request body:
-
-```json
-{
-    "day": "Monday",
-    "mealType": "BREAKFAST"
-}
-```
-
-### 🤖 AI Assistant
-
-```http
-POST /api/ai/chat                         (Protected)
-```
-
-Request body:
-
-```json
-{
-    "message": "What can I replace my Monday breakfast with?"
-}
-```
-
-Success response:
-
-```json
-{
-    "success": true,
-    "answer": "..."
-}
-```
-
-The chat endpoint uses the authenticated user's current meal plan, preferences, and compatible recipes as controlled AI context. Responses are returned as a single JSON response; streaming and server-side chat history are not currently implemented.
+MongoDB indexes are used to improve query performance for supported search/filter operations.
 
 ---
 
-## 🚀 Getting Started
+# 📸 Image Upload
 
-```bash
-npm install
-npm start
+Recipe images are uploaded using **Multer + Cloudinary**.
+
+### Features
+
+* Cloudinary-based image storage
+* Multipart form-data uploads
+* JPG, JPEG, and PNG support
+* Maximum file size of 5 MB
+* Stores image URL and Cloudinary public ID
+* Image replacement support
+* Automatic image cleanup during recipe deletion/replacement
+
+### Upload Endpoint
+
+```http
+POST /api/recipes/upload
 ```
 
-For development with automatic restart:
+The request must use:
 
-```bash
-npm run dev
+```text
+Content-Type: multipart/form-data
 ```
 
-Create a `.env` file:
+with the field:
 
-```
-PORT=5000
-MONGO_URI=your_mongodb_uri
-JWT_SECRET=your_secret
-CLOUDINARY_NAME=your_cloud_name
-CLOUDINARY_KEY=your_api_key
-CLOUDINARY_SECRET=your_api_secret
+```text
+image
 ```
 
-### Ollama Setup
+---
 
-Install Ollama from [ollama.com/download/windows](https://ollama.com/download/windows), then ensure the Ollama server is running and the model is available:
+# 📅 Personalized Meal Planning
 
-```bash
-ollama serve
-ollama pull llama3.2
+Users can generate personalized weekly meal plans based on their preferences.
+
+### Supported preferences
+
+* Diet type
+* Daily calorie target
+* Meals per day
+* Cuisine
+* Maximum cooking time
+
+### Example request
+
+```http
+POST /api/meal-plans/generate
 ```
 
-If Ollama is already running, do not start a second server. The backend calls:
+```json
+{
+  "dietType": "vegetarian",
+  "dailyCalories": 2000,
+  "mealsPerDay": 3,
+  "cuisine": "Indian",
+  "maxCookingTime": 30
+}
+```
+
+The backend validates meal-plan parameters before generating the plan.
+
+For example:
+
+* Daily calories must be positive
+* Meals per day must be between 1 and 4
+* Cooking time must be non-negative
+
+---
+
+## 💾 Saved Meal Plans
+
+Authenticated users can retrieve their saved meal plan for the current week.
+
+```http
+GET /api/meal-plans
+```
+
+If no meal plan exists for the current week, the API returns:
+
+```http
+404
+```
+
+with an appropriate response message.
+
+---
+
+# 🔄 AI-Powered Meal Replacement
+
+Users can replace an existing meal with a compatible alternative.
+
+```http
+POST /api/meal-plans/:mealPlanId/replace
+```
+
+Example request:
+
+```json
+{
+  "day": "Monday",
+  "mealType": "BREAKFAST"
+}
+```
+
+### Replacement flow
+
+```text
+User selects meal
+        │
+        ▼
+Backend retrieves meal plan
+        │
+        ▼
+Find compatible recipes
+        │
+        ▼
+Create controlled candidate list
+        │
+        ▼
+Send candidates to AI
+        │
+        ▼
+AI selects one candidate
+        │
+        ▼
+Backend validates AI selection
+        │
+        ▼
+Update meal plan
+        │
+        ▼
+Return replacement recipe
+```
+
+The AI is not allowed to directly select arbitrary database records.
+
+The backend validates the AI-generated recipe ID/title against the candidate recipes before updating the meal plan.
+
+This prevents an invalid or hallucinated recipe selection from being persisted.
+
+---
+
+# 🤖 AI Meal Assistant
+
+SmartMealPlanner includes an AI-powered conversational assistant using **Ollama and the `llama3.2` model**.
+
+### Endpoint
+
+```http
+POST /api/ai/chat
+```
+
+### Example request
+
+```json
+{
+  "message": "What can I replace my Monday breakfast with?"
+}
+```
+
+### Example response
+
+```json
+{
+  "success": true,
+  "answer": "..."
+}
+```
+
+---
+
+## 🧠 Controlled AI Context
+
+The AI assistant does not receive unrestricted database access.
+
+The backend constructs a controlled context containing:
+
+### User preferences
+
+```text
+Diet
+Cuisine
+Daily calories
+Meals per day
+Maximum cooking time
+```
+
+### Current meal plan
+
+```text
+Day
+Meal type
+Recipe
+Calories
+Cooking time
+```
+
+### Compatible recipes
+
+The backend filters compatible recipes and provides a controlled candidate list to the AI.
+
+The AI is instructed to use only this context and not invent recipe details.
+
+---
+
+## 🤖 AI Technology
+
+```text
+Android / React Client
+          │
+          ▼
+POST /api/ai/chat
+          │
+          ▼
+Node.js Backend
+          │
+          ├── Current Meal Plan
+          ├── User Preferences
+          └── Compatible Recipes
+          │
+          ▼
+     Ollama API
+          │
+          ▼
+       llama3.2
+          │
+          ▼
+     JSON Response
+```
+
+The backend communicates with the local Ollama API:
 
 ```text
 http://localhost:11434/api/generate
 ```
 
-### Android and Postman URLs
+The current implementation uses:
 
-For Postman on the same computer, use:
+```text
+model: llama3.2
+stream: false
+```
+
+AI responses are returned as a single JSON response. Server-side conversational history and streaming responses are not currently implemented.
+
+---
+
+# 🛡️ AI Response Validation
+
+AI-generated meal replacements are validated before database updates.
+
+The backend:
+
+1. Generates a list of compatible recipes.
+2. Sends only those candidates to the AI.
+3. Requests a structured recipe selection.
+4. Parses the AI response.
+5. Validates the returned recipe ID/title against the candidate list.
+6. Updates the meal plan only when a valid candidate is selected.
+
+This creates a controlled AI workflow where the model assists with selection while the backend remains responsible for database integrity.
+
+---
+
+# 📦 Technology Stack
+
+## Backend
+
+* Node.js
+* Express.js
+* MongoDB
+* Mongoose
+* JWT
+* bcryptjs
+* Cloudinary
+* Multer
+* multer-storage-cloudinary
+* Ollama
+* llama3.2
+
+## Mobile
+
+* Kotlin
+* MVVM
+* Retrofit
+* OkHttp
+* Kotlin Coroutines
+* LiveData
+* DataStore
+
+## Web
+
+* React
+* JavaScript
+* REST API integration
+
+---
+
+# 📁 Backend Structure
+
+```text
+src/
+│
+├── controllers/
+│   ├── authController.js
+│   ├── recipeController.js
+│   ├── mealPlanController.js
+│   ├── mealReplacementController.js
+│   └── aiController.js
+│
+├── routes/
+│   ├── authRoutes.js
+│   ├── recipeRoutes.js
+│   ├── mealPlanRoutes.js
+│   └── aiRoutes.js
+│
+├── models/
+│   ├── User.js
+│   ├── Recipe.js
+│   └── MealPlan.js
+│
+├── middleware/
+│   ├── authMiddleware.js
+│   ├── roleMiddleware.js
+│   └── uploadMiddleware.js
+│
+├── services/
+│   ├── aiService.js
+│   └── mealPlanService.js
+│
+├── config/
+│   ├── db.js
+│   └── cloudinary.js
+│
+├── utils/
+│
+├── app.js
+└── server.js
+```
+
+---
+
+# 🔗 API Endpoints
+
+All endpoints are prefixed with:
+
+```text
+/api
+```
+
+Protected endpoints require:
+
+```http
+Authorization: Bearer <token>
+```
+
+---
+
+## 🔐 Authentication
+
+```http
+POST /api/auth/register
+POST /api/auth/login
+GET  /api/auth/me
+```
+
+`/api/auth/me` requires authentication.
+
+---
+
+## 🍳 Recipes
+
+```http
+POST   /api/recipes
+GET    /api/recipes
+GET    /api/recipes/search
+GET    /api/recipes/categories
+GET    /api/recipes/recommended
+GET    /api/recipes/week
+GET    /api/recipes/:id
+PUT    /api/recipes/:id
+DELETE /api/recipes/:id
+```
+
+### Authorization
+
+```text
+POST   /api/recipes       → ADMIN
+PUT    /api/recipes/:id   → Authenticated owner or ADMIN
+DELETE /api/recipes/:id   → ADMIN
+```
+
+---
+
+## ⭐ Ratings
+
+```http
+POST /api/recipes/:id/rate
+```
+
+Requires authentication.
+
+---
+
+## ❤️ Favorites
+
+```http
+POST   /api/recipes/favorites/:id
+DELETE /api/recipes/favorites/:id
+GET    /api/recipes/favorites
+```
+
+All require authentication.
+
+---
+
+## 📸 Image Upload
+
+```http
+POST /api/recipes/upload
+```
+
+Requires authentication.
+
+Multipart field:
+
+```text
+image
+```
+
+Maximum file size:
+
+```text
+5 MB
+```
+
+---
+
+## 📅 Meal Plans
+
+```http
+POST /api/meal-plans/generate
+GET  /api/meal-plans
+POST /api/meal-plans/:mealPlanId/replace
+```
+
+All require authentication.
+
+---
+
+## 🤖 AI Assistant
+
+```http
+POST /api/ai/chat
+```
+
+Requires authentication.
+
+Example:
+
+```json
+{
+  "message": "What can I replace my Monday breakfast with?"
+}
+```
+
+---
+
+# 🚀 Getting Started
+
+## Prerequisites
+
+Install:
+
+* Node.js
+* npm
+* MongoDB or MongoDB Atlas
+* Cloudinary account
+* Ollama for local AI functionality
+
+---
+
+## 1. Clone the Repository
+
+```bash
+git clone https://github.com/jeenwalvaishali/SmartMealPlanner-backend.git
+```
+
+Navigate to the project:
+
+```bash
+cd SmartMealPlanner-backend
+```
+
+---
+
+## 2. Install Dependencies
+
+```bash
+npm install
+```
+
+---
+
+## 3. Configure Environment Variables
+
+Create a `.env` file in the project root:
+
+```env
+PORT=5000
+
+MONGO_URI=your_mongodb_uri
+
+JWT_SECRET=your_secret
+
+CLOUDINARY_NAME=your_cloud_name
+CLOUDINARY_KEY=your_api_key
+CLOUDINARY_SECRET=your_api_secret
+```
+
+Do not commit `.env` or production secrets to GitHub.
+
+---
+
+# 🤖 Ollama Setup
+
+The AI functionality uses Ollama locally.
+
+Install Ollama and make sure it is available on your machine.
+
+Pull the model:
+
+```bash
+ollama pull llama3.2
+```
+
+Start the Ollama server:
+
+```bash
+ollama serve
+```
+
+If Ollama is already running as a background service, do not start a second server.
+
+The backend communicates with:
+
+```text
+http://localhost:11434/api/generate
+```
+
+---
+
+# ▶️ Start the Backend
+
+### Development
+
+```bash
+npm run dev
+```
+
+This starts the server using Nodemon.
+
+### Production-style start
+
+```bash
+npm start
+```
+
+The backend runs on:
 
 ```text
 http://localhost:5000
 ```
 
-For the Android emulator, use:
+unless a different `PORT` is configured.
+
+---
+
+# 📱 Android Local Development
+
+When the Android application runs on an **Android Emulator**, the host computer's localhost is accessible through:
 
 ```text
-http://10.0.2.2:5000
+http://10.0.2.2:5000/
 ```
 
-For a physical Android device, use the computer's local IPv4 address, for example `http://192.168.1.10:5000`, and keep both devices on the same network.
+For example:
+
+```text
+BASE_URL=http://10.0.2.2:5000/api/
+```
+
+For a physical Android device, use the computer's local IPv4 address:
+
+```text
+http://192.168.1.10:5000/
+```
+
+Both devices must be connected to the same local network.
 
 ---
 
-## 📈 Production-Ready Considerations
+# 🧪 API Testing
+
+The API can be tested using tools such as:
+
+* Postman
+* Android application
+* React web application
+
+Example local API:
+
+```text
+http://localhost:5000/api
+```
+
+---
+
+# 📈 Engineering & Performance Considerations
+
+The backend includes several practices intended to improve reliability and performance:
 
 * Input validation
-* Pagination limits for performance protection
-* Indexed fields for search optimization
-* Secure role enforcement
-* Image lifecycle management
-* Lean queries for read optimization
+* Pagination
+* Pagination limits
+* MongoDB indexes
+* Lean queries for read-heavy operations
+* JWT authentication
+* Role-based authorization
+* Ownership checks
+* Protected routes
+* Centralized error handling
+* Cloudinary image lifecycle management
+* Controlled AI context
+* AI candidate validation
 
 ---
 
+# 🔒 Security Considerations
+
+Production deployments should use:
+
+* HTTPS
+* Secure environment variable management
+* Strong JWT secrets
+* Appropriate token expiration/refresh policies
+* Restrictive CORS configuration
+* Rate limiting
+* Request validation
+* Secure database credentials
+* Monitoring and logging
+
+The current development configuration allows CORS broadly for API requests, so production deployments should restrict allowed origins to the actual client applications.
+
+---
+
+# 🌐 Related Repositories
+
+### 📱 Android Application
+
+https://github.com/jeenwalvaishali/SMP-FrontendAndroidAPP
+
+### 🌐 React Web Application
+
+Add your React repository here.
+
+### 🛠️ Admin Panel
+
+https://github.com/jeenwalvaishali/SMP-Admin-Panel
+
+
+---
+
+# 👩‍💻 Author
+
+**Vaishali Jeenwal**
+
+Software Engineer
+
+**Technologies:** Kotlin • Android • React • JavaScript • Node.js • Express • MongoDB • REST APIs • AI Integration
