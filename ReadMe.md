@@ -820,7 +820,7 @@ https://github.com/jeenwalvaishali/SMP-FrontendAndroidAPP
 
 ### 🌐 React Web Application
 
-Add your React repository here.
+https://github.com/jeenwalvaishali/SmartMealPlanner-backend
 
 ### 🛠️ Admin Panel
 
