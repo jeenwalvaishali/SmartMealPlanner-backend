@@ -16,11 +16,13 @@ app.use(express.json());
 const authRoutes = require('./routes/authRoutes');
 const recipeRoutes = require('./routes/recipeRoutes');
 const mealPlanRoutes = require('./routes/mealPlanRoutes');
+const aiRoutes = require('./routes/aiRoutes');
 
 // Route mounting
 app.use('/api/auth', authRoutes);
 app.use('/api/recipes', recipeRoutes);
 app.use('/api/meal-plans', mealPlanRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Global error handler
 app.use((err, req, res, next) => {

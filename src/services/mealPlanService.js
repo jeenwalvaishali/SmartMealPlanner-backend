@@ -47,7 +47,13 @@ const getCalorieDistribution = (dailyCalories, mealsPerDay) => {
   throw new Error('mealsPerDay must be between 1 and 4');
 };
 
-const filterRecipes = async ({ dietType, cuisine, maxCookingTime }) => {
+const filterRecipes = async ({
+  dietType,
+  cuisine,
+  maxCookingTime,
+  mealType,
+  excludeRecipeId
+}) => {
   const filter = {};
 
   if (dietType) {
@@ -62,8 +68,18 @@ const filterRecipes = async ({ dietType, cuisine, maxCookingTime }) => {
     filter.prepTime = { $lte: maxCookingTime };
   }
 
+  if (mealType) {
+    filter.mealTypes = {
+      $in: [new RegExp(`^${escapeRegExp(mealType)}$`, 'i')]
+    };
+  }
+
+  if (excludeRecipeId) {
+    filter._id = { $ne: excludeRecipeId };
+  }
+
   return Recipe.find(filter)
-    .select('title calories mealTypes')
+    .select('title calories prepTime mealTypes')
     .lean();
 };
 
@@ -222,6 +238,13 @@ const getMealPlan = async (userId, weekStartDate = new Date()) => {
   }).populate('days.meals.recipe');
 };
 
+const getMealPlanById = async (userId, mealPlanId) => {
+  return MealPlan.findOne({
+    _id: mealPlanId,
+    user: userId
+  }).populate('days.meals.recipe');
+};
+
 const saveMealPlan = async (userId, weekStartDate, days, preferences) => {
   const normalizedWeekStartDate = getWeekStartDate(weekStartDate);
   const normalizedDays = normalizeDays(days);
@@ -259,6 +282,7 @@ module.exports = {
   findClosestRecipe,
   getWeekStartDate,
   getMealPlan,
+  getMealPlanById,
   saveMealPlan,
   deleteMealPlan,
   generateMealPlan
